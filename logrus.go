@@ -3,8 +3,8 @@ package logrus
 import (
 	"fmt"
 
+	"github.com/marcaudefroy/loggers"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/birkirb/loggers.v1"
 )
 
 // Logger is an Contextual logger wrapper over Logrus's logger.
@@ -31,12 +31,36 @@ func NewDefaultLogger() loggers.Contextual {
 }
 
 // WithField returns an advanced logger with a pre-set field.
-func (l *Logger) WithField(key string, value interface{}) loggers.Advanced {
-	return l.Logger.WithField(key, value)
+func (l *Logger) WithField(key string, value interface{}) loggers.Contextual {
+	entry := &LoggerEntry{logger: l, Entry: l.Logger.WithField(key, value)}
+	return entry
 }
 
 // WithFields returns an advanced logger with pre-set fields.
-func (l *Logger) WithFields(fields ...interface{}) loggers.Advanced {
+func (l *Logger) WithFields(fields ...interface{}) loggers.Contextual {
+	entry := &LoggerEntry{logger: l, Entry: l.Logger.WithFields(sliceToMap(fields...))}
+	return entry
+}
+
+type LoggerEntry struct {
+	logger *Logger
+	*logrus.Entry
+}
+
+// WithField returns an advanced logger with a pre-set field.
+func (l *LoggerEntry) WithField(key string, value interface{}) loggers.Contextual {
+	l.Entry = l.Entry.WithField(key, value)
+	return l
+}
+
+// WithFields returns an advanced logger with a pre-set field.
+func (l *LoggerEntry) WithFields(fields ...interface{}) loggers.Contextual {
+
+	l.Entry = l.Entry.WithFields(sliceToMap(fields...))
+	return l
+}
+
+func sliceToMap(fields ...interface{}) map[string]interface{} {
 	f := make(map[string]interface{}, len(fields)/2)
 	var key, value interface{}
 	for i := 0; i+1 < len(fields); i = i + 2 {
@@ -48,6 +72,5 @@ func (l *Logger) WithFields(fields ...interface{}) loggers.Advanced {
 			f[s.String()] = value
 		}
 	}
-
-	return l.Logger.WithFields(logrus.Fields(f))
+	return f
 }

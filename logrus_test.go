@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/marcaudefroy/loggers"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/birkirb/loggers.v1"
 )
 
 func TestLogrusInterface(t *testing.T) {
@@ -52,6 +52,17 @@ func TestLogrusWithFieldsOutput(t *testing.T) {
 	l.WithFields("test", true).Warn("This is a message.")
 
 	expectedMatch := "(?i)warn.*This is a message.*test.*=true"
+	actual := b.String()
+	if ok, _ := regexp.Match(expectedMatch, []byte(actual)); !ok {
+		t.Errorf("Log output mismatch %s (actual) != %s (expected)", actual, expectedMatch)
+	}
+}
+
+func TestLogrusChainedWithFieldsOutput(t *testing.T) {
+	l, b := newBufferedLogrusLog()
+	l.WithFields("test", true).WithFields("test2", false).Warn("This is a message.")
+
+	expectedMatch := "(?i)warn.*This is a message.*test.*=true.*test2.*=false"
 	actual := b.String()
 	if ok, _ := regexp.Match(expectedMatch, []byte(actual)); !ok {
 		t.Errorf("Log output mismatch %s (actual) != %s (expected)", actual, expectedMatch)
