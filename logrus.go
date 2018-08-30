@@ -49,15 +49,27 @@ type LoggerEntry struct {
 
 // WithField returns an advanced logger with a pre-set field.
 func (l *LoggerEntry) WithField(key string, value interface{}) loggers.Contextual {
-	l.Entry = l.Entry.WithField(key, value)
-	return l
+	entry := logrus.NewEntry(l.logger.Logger)
+	for k, v := range l.Entry.Data {
+		entry.Data[k] = v
+	}
+	return &LoggerEntry{
+		logger: l.logger,
+		Entry:  entry.WithField(key, value),
+	}
 }
 
 // WithFields returns an advanced logger with a pre-set field.
 func (l *LoggerEntry) WithFields(fields ...interface{}) loggers.Contextual {
 
-	l.Entry = l.Entry.WithFields(sliceToMap(fields...))
-	return l
+	entry := logrus.NewEntry(l.logger.Logger)
+	for k, v := range l.Entry.Data {
+		entry.Data[k] = v
+	}
+	return &LoggerEntry{
+		logger: l.logger,
+		Entry:  entry.WithFields(sliceToMap(fields...)),
+	}
 }
 
 func sliceToMap(fields ...interface{}) map[string]interface{} {
